@@ -27,7 +27,7 @@ Open question for clarification:
   mean settings can reset on app restart, or also reset when
   switching between the main and settings screens?
 
-## Week 2.4 - Compose layout basics practical
+## Week 2 - Compose layout basics practical
 
 - Worked through the Add a Button to an App pathway and the Intro to
   State in Compose codelab (Android Basics with Compose, Unit 2)
