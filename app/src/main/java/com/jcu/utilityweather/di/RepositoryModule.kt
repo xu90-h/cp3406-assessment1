@@ -1,6 +1,6 @@
 package com.jcu.utilityweather.di
 
-import com.jcu.utilityweather.data.repository.FakeWeatherRepository
+import com.jcu.utilityweather.data.repository.WeatherRepositoryImpl
 import com.jcu.utilityweather.data.repository.WeatherRepository
 import dagger.Binds
 import dagger.Module
@@ -14,5 +14,5 @@ abstract class RepositoryModule {
 
     @Binds
     @Singleton
-    abstract fun bindWeatherRepository(impl: FakeWeatherRepository): WeatherRepository
+    abstract fun bindWeatherRepository(impl: WeatherRepositoryImpl): WeatherRepository
 }
