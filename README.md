@@ -1,8 +1,80 @@
-# CP3406 Assessment Work
+# Utility Weather
 
-Repository for CP3406/CP5307 assessment items.
+An "at-a-glance" weather utility app built for CP3406/CP5307 Assessment 1. Search any city
+and instantly see its current temperature, condition, and the details that matter most —
+no clutter, no extra taps.
 
-## Week 1 setup log
+## Core features
+
+- **Current weather at a glance** — city name, condition icon, temperature and today's
+  high/low are shown immediately. Feels-like temperature, humidity and wind speed sit
+  behind an expandable "Show details" toggle to keep the main screen uncluttered.
+- **City search** — type any city name and fetch its live weather via the free
+  [Open-Meteo](https://open-meteo.com/) geocoding + forecast APIs (no API key required).
+- **Settings that reshape the main screen** — switch between Celsius/Fahrenheit and
+  km/h/mph, and toggle whether "feels like" and wind speed are shown. Changes apply
+  immediately on the utility screen (settings are session-only, not persisted).
+- **Bottom navigation** between the Weather screen and the Settings screen, all within a
+  single Activity.
+
+## Architecture
+
+- **Jetpack Compose** + **Material 3** for the entire UI.
+- **MVVM**: a single `WeatherViewModel` (shared by both screens via Hilt) exposes a
+  `StateFlow<WeatherScreenState>` that both screens collect.
+- **Repository pattern**: `WeatherRepository` abstracts the data source; `WeatherRepositoryImpl`
+  talks to Retrofit. The ViewModel never touches the network directly.
+- **Dependency injection**: Hilt provides the Retrofit/OkHttp/Moshi stack and binds the
+  repository interface to its implementation (`di/NetworkModule.kt`, `di/RepositoryModule.kt`).
+- **Networking**: Retrofit + Moshi call Open-Meteo's geocoding endpoint (city name → lat/lon)
+  and forecast endpoint (lat/lon → current + daily weather), combined into one domain model
+  (`CurrentWeather`) by the repository.
+
+## Project structure
+
+```
+app/src/main/java/com/jcu/utilityweather/
+├── data/
+│   ├── remote/            Retrofit service + DTOs
+│   └── repository/        WeatherRepository interface + impl
+├── di/                    Hilt modules (networking, repository binding)
+├── domain/                Domain models (CurrentWeather, WeatherSettings)
+├── ui/
+│   ├── WeatherViewModel.kt
+│   ├── home/              UtilityScreen (main weather display)
+│   ├── settings/          SettingsScreen
+│   ├── navigation/        UtilityApp (bottom-nav scaffold)
+│   └── theme/             Material 3 theme
+└── MainActivity.kt
+```
+
+## Running the app
+
+Open the project in Android Studio (Ladybug or later), let Gradle sync, and run on an
+emulator or device with internet access — no API key setup needed.
+
+Command line: `./gradlew assembleDebug` to build and `./gradlew testDebugUnitTest` to run the tests.
+
+## Tests
+
+`app/src/test/java/.../WeatherViewModelTest.kt` covers the initial load, error propagation,
+refetching when a unit changes, display toggles not refetching, and blank-city handling,
+using MockK to fake the repository.
+
+
+---
+
+## AI assistance
+
+The code in this repository was written with the help of an AI assistant (Claude). This is
+declared in the assessment's Declaration of AI-Generated Material.
+
+---
+
+# Development log
+
+
+### Week 1 setup log
 - Installed Android Studio (Quail 4 | 2026.1.4) on macOS (Apple Silicon)
 - Completed the Introduction to Kotlin Pathway
 - Created this private repository to track assessment work
@@ -10,7 +82,7 @@ Repository for CP3406/CP5307 assessment items.
   and Assessment 3 (Education App) briefs
 
 
-## Assessment 1 - Utility App direction notes (Week 1)
+### Assessment 1 - Utility App direction notes (Week 1)
 
 Possible directions considered:
 1. Water intake tracker — main screen shows glasses/ml drunk today
@@ -27,7 +99,7 @@ Open question for clarification:
   mean settings can reset on app restart, or also reset when
   switching between the main and settings screens?
 
-## Week 2 - Compose layout basics practical
+### Week 2 - Compose layout basics practical
 
 - Worked through the Add a Button to an App pathway and the Intro to
   State in Compose codelab (Android Basics with Compose, Unit 2)
@@ -36,7 +108,7 @@ Open question for clarification:
   the stat columns spread out evenly instead of hugging the edges —
   much easier to scan at a glance
 
-### Connecting to the Utility App (Assessment 1)
+#### Connecting to the Utility App (Assessment 1)
 
 Went with direction #2 (Weather at-a-glance) instead of the water
 tracker, and started building it as `UtilityWeatherApp`:
