@@ -15,6 +15,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import com.jcu.utilityweather.domain.WeatherSettings
 import com.jcu.utilityweather.ui.home.UtilityScreen
 import com.jcu.utilityweather.ui.settings.SettingsScreen
 
@@ -26,6 +27,7 @@ private enum class UtilityTab(val label: String) {
 @Composable
 fun UtilityApp() {
     var selectedTab by remember { mutableStateOf(UtilityTab.Weather) }
+    var settings by remember { mutableStateOf(WeatherSettings()) }
 
     Scaffold(
         bottomBar = {
@@ -46,8 +48,12 @@ fun UtilityApp() {
         }
     ) { innerPadding ->
         when (selectedTab) {
-            UtilityTab.Weather -> UtilityScreen(modifier = Modifier.padding(innerPadding))
-            UtilityTab.Settings -> SettingsScreen(modifier = Modifier.padding(innerPadding))
+            UtilityTab.Weather -> UtilityScreen(settings = settings, modifier = Modifier.padding(innerPadding))
+            UtilityTab.Settings -> SettingsScreen(
+                settings = settings,
+                onSettingsChange = { settings = it },
+                modifier = Modifier.padding(innerPadding)
+            )
         }
     }
 }

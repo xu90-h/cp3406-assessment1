@@ -31,6 +31,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.jcu.utilityweather.domain.CurrentWeather
+import com.jcu.utilityweather.domain.WeatherSettings
 import com.jcu.utilityweather.ui.theme.UtilityWeatherTheme
 
 private val sampleWeather = CurrentWeather(
@@ -45,7 +46,7 @@ private val sampleWeather = CurrentWeather(
 )
 
 @Composable
-fun UtilityScreen(modifier: Modifier = Modifier) {
+fun UtilityScreen(settings: WeatherSettings, modifier: Modifier = Modifier) {
     var city by rememberSaveable { mutableStateOf("Townsville") }
 
     Column(
@@ -61,7 +62,7 @@ fun UtilityScreen(modifier: Modifier = Modifier) {
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            WeatherGlanceCard(weather = sampleWeather)
+            WeatherGlanceCard(weather = sampleWeather, settings = settings)
         }
     }
 }
@@ -87,7 +88,9 @@ private fun CitySearchField(
 }
 
 @Composable
-private fun WeatherGlanceCard(weather: CurrentWeather) {
+private fun WeatherGlanceCard(weather: CurrentWeather, settings: WeatherSettings) {
+    val tempUnit = settings.temperatureUnit
+    val windUnit = settings.windSpeedUnit
     var showDetails by rememberSaveable { mutableStateOf(false) }
 
     Card(modifier = Modifier.fillMaxWidth()) {
@@ -98,7 +101,7 @@ private fun WeatherGlanceCard(weather: CurrentWeather) {
             Text(text = weather.cityName, style = MaterialTheme.typography.titleLarge)
             Text(text = weather.icon, fontSize = 56.sp)
             Text(
-                text = "${weather.temperature.roundedString()}°C",
+                text = "${tempUnit.fromCelsius(weather.temperature).roundedString()}${tempUnit.symbol}",
                 fontSize = 48.sp,
                 fontWeight = FontWeight.Bold
             )
@@ -108,7 +111,7 @@ private fun WeatherGlanceCard(weather: CurrentWeather) {
 
             StatColumn(
                 label = "High / Low",
-                value = "${weather.todayMax.roundedString()}° / ${weather.todayMin.roundedString()}°"
+                value = "${tempUnit.fromCelsius(weather.todayMax).roundedString()}° / ${tempUnit.fromCelsius(weather.todayMin).roundedString()}°"
             )
 
             TextButton(onClick = { showDetails = !showDetails }) {
@@ -121,9 +124,13 @@ private fun WeatherGlanceCard(weather: CurrentWeather) {
 
             AnimatedVisibility(visible = showDetails) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                    StatColumn(label = "Feels like", value = "${weather.feelsLike.roundedString()}°C")
+                    if (settings.showFeelsLike) {
+                        StatColumn(label = "Feels like", value = "${tempUnit.fromCelsius(weather.feelsLike).roundedString()}${tempUnit.symbol}")
+                    }
                     StatColumn(label = "Humidity", value = "${weather.humidity}%")
-                    StatColumn(label = "Wind", value = "${weather.windSpeed.roundedString()} km/h")
+                    if (settings.showWind) {
+                        StatColumn(label = "Wind", value = "${windUnit.fromKmh(weather.windSpeed).roundedString()} ${windUnit.label}")
+                    }
                 }
             }
         }
@@ -143,5 +150,5 @@ private fun Double.roundedString(): String = "%.0f".format(this)
 @Preview(showBackground = true)
 @Composable
 private fun UtilityScreenPreview() {
-    UtilityWeatherTheme { UtilityScreen() }
+    UtilityWeatherTheme { UtilityScreen(settings = WeatherSettings()) }
 }
