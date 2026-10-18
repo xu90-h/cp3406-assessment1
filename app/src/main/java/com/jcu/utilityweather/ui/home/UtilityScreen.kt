@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -32,37 +33,42 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.jcu.utilityweather.domain.CurrentWeather
 import com.jcu.utilityweather.domain.WeatherSettings
+import com.jcu.utilityweather.ui.WeatherScreenState
+import com.jcu.utilityweather.ui.WeatherUiState
 import com.jcu.utilityweather.ui.theme.UtilityWeatherTheme
 
-private val sampleWeather = CurrentWeather(
-    cityName = "Townsville, Australia",
-    temperature = 24.0,
-    feelsLike = 24.0,
-    humidity = 63,
-    windSpeed = 19.0,
-    todayMax = 26.0,
-    todayMin = 17.0,
-    weatherCode = 2
-)
-
 @Composable
-fun UtilityScreen(settings: WeatherSettings, modifier: Modifier = Modifier) {
-    var city by rememberSaveable { mutableStateOf("Townsville") }
-
+fun UtilityScreen(
+    state: WeatherScreenState,
+    onCityChange: (String) -> Unit,
+    onSearch: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     Column(
         modifier = modifier
             .fillMaxSize()
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        CitySearchField(city = city, onCityChange = { city = it }, onSearch = {})
+        CitySearchField(city = state.city, onCityChange = onCityChange, onSearch = onSearch)
 
         Column(
             modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            WeatherGlanceCard(weather = sampleWeather, settings = settings)
+            when (val weatherState = state.weatherState) {
+                is WeatherUiState.Idle -> Text("Search a city to see its weather")
+                is WeatherUiState.Loading -> CircularProgressIndicator()
+                is WeatherUiState.Error -> Text(
+                    text = weatherState.message,
+                    color = MaterialTheme.colorScheme.error
+                )
+                is WeatherUiState.Success -> WeatherGlanceCard(
+                    weather = weatherState.weather,
+                    settings = state.settings
+                )
+            }
         }
     }
 }
@@ -89,8 +95,7 @@ private fun CitySearchField(
 
 @Composable
 private fun WeatherGlanceCard(weather: CurrentWeather, settings: WeatherSettings) {
-    val tempUnit = settings.temperatureUnit
-    val windUnit = settings.windSpeedUnit
+    val tempSymbol = settings.temperatureUnit.symbol
     var showDetails by rememberSaveable { mutableStateOf(false) }
 
     Card(modifier = Modifier.fillMaxWidth()) {
@@ -101,7 +106,7 @@ private fun WeatherGlanceCard(weather: CurrentWeather, settings: WeatherSettings
             Text(text = weather.cityName, style = MaterialTheme.typography.titleLarge)
             Text(text = weather.icon, fontSize = 56.sp)
             Text(
-                text = "${tempUnit.fromCelsius(weather.temperature).roundedString()}${tempUnit.symbol}",
+                text = "${weather.temperature.roundedString()}$tempSymbol",
                 fontSize = 48.sp,
                 fontWeight = FontWeight.Bold
             )
@@ -111,7 +116,7 @@ private fun WeatherGlanceCard(weather: CurrentWeather, settings: WeatherSettings
 
             StatColumn(
                 label = "High / Low",
-                value = "${tempUnit.fromCelsius(weather.todayMax).roundedString()}° / ${tempUnit.fromCelsius(weather.todayMin).roundedString()}°"
+                value = "${weather.todayMax.roundedString()}° / ${weather.todayMin.roundedString()}°"
             )
 
             TextButton(onClick = { showDetails = !showDetails }) {
@@ -125,11 +130,11 @@ private fun WeatherGlanceCard(weather: CurrentWeather, settings: WeatherSettings
             AnimatedVisibility(visible = showDetails) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                     if (settings.showFeelsLike) {
-                        StatColumn(label = "Feels like", value = "${tempUnit.fromCelsius(weather.feelsLike).roundedString()}${tempUnit.symbol}")
+                        StatColumn(label = "Feels like", value = "${weather.feelsLike.roundedString()}$tempSymbol")
                     }
                     StatColumn(label = "Humidity", value = "${weather.humidity}%")
                     if (settings.showWind) {
-                        StatColumn(label = "Wind", value = "${windUnit.fromKmh(weather.windSpeed).roundedString()} ${windUnit.label}")
+                        StatColumn(label = "Wind", value = "${weather.windSpeed.roundedString()} ${settings.windSpeedUnit.label}")
                     }
                 }
             }
@@ -150,5 +155,15 @@ private fun Double.roundedString(): String = "%.0f".format(this)
 @Preview(showBackground = true)
 @Composable
 private fun UtilityScreenPreview() {
-    UtilityWeatherTheme { UtilityScreen(settings = WeatherSettings()) }
+    UtilityWeatherTheme {
+        UtilityScreen(
+            state = WeatherScreenState(
+                weatherState = WeatherUiState.Success(
+                    CurrentWeather("Townsville, Australia", 24.0, 24.0, 63, 19.0, 26.0, 17.0, 2)
+                )
+            ),
+            onCityChange = {},
+            onSearch = {}
+        )
+    }
 }
