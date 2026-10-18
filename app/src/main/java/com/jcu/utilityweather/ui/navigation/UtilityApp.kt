@@ -16,7 +16,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.jcu.utilityweather.ui.WeatherViewModel
 import com.jcu.utilityweather.ui.home.UtilityScreen
 import com.jcu.utilityweather.ui.settings.SettingsScreen
@@ -29,7 +29,7 @@ private enum class UtilityTab(val label: String) {
 @Composable
 fun UtilityApp() {
     var selectedTab by remember { mutableStateOf(UtilityTab.Weather) }
-    val viewModel: WeatherViewModel = viewModel()
+    val viewModel: WeatherViewModel = hiltViewModel()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
     Scaffold(

@@ -2,15 +2,16 @@ package com.jcu.utilityweather.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.jcu.utilityweather.data.repository.FakeWeatherRepository
 import com.jcu.utilityweather.data.repository.WeatherRepository
 import com.jcu.utilityweather.domain.CurrentWeather
 import com.jcu.utilityweather.domain.WeatherSettings
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 sealed interface WeatherUiState {
     data object Idle : WeatherUiState
@@ -29,8 +30,9 @@ data class WeatherScreenState(
  * Shared by both bottom-nav destinations so a settings change can immediately
  * re-fetch and be reflected on the weather screen.
  */
-class WeatherViewModel(
-    private val repository: WeatherRepository = FakeWeatherRepository()
+@HiltViewModel
+class WeatherViewModel @Inject constructor(
+    private val repository: WeatherRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(WeatherScreenState())

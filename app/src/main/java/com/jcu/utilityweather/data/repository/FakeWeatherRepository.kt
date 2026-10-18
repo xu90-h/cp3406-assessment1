@@ -4,9 +4,10 @@ import com.jcu.utilityweather.domain.CurrentWeather
 import com.jcu.utilityweather.domain.TemperatureUnit
 import com.jcu.utilityweather.domain.WindSpeedUnit
 import kotlinx.coroutines.delay
+import javax.inject.Inject
 
 /** Offline stand-in used until the real web API is connected. */
-class FakeWeatherRepository : WeatherRepository {
+class FakeWeatherRepository @Inject constructor() : WeatherRepository {
 
     override suspend fun getCurrentWeather(
         city: String,
