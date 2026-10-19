@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import com.jcu.utilityweather.domain.TemperatureUnit
 import com.jcu.utilityweather.domain.WeatherSettings
 import com.jcu.utilityweather.domain.WindSpeedUnit
+import com.jcu.utilityweather.ui.MaxContentWidth
 import com.jcu.utilityweather.ui.theme.UtilityWeatherTheme
 
 /** Controls that reshape what the weather screen shows. */
@@ -45,7 +46,7 @@ fun SettingsScreen(
         SettingsContent(
             settings = settings,
             onSettingsChange = onSettingsChange,
-            modifier = Modifier.widthIn(max = 480.dp).fillMaxWidth()
+            modifier = Modifier.widthIn(max = MaxContentWidth).fillMaxWidth()
         )
     }
 }

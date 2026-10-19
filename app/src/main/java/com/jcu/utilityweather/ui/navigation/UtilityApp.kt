@@ -15,38 +15,39 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jcu.utilityweather.ui.WeatherViewModel
 import com.jcu.utilityweather.ui.home.UtilityScreen
 import com.jcu.utilityweather.ui.settings.SettingsScreen
 
-private enum class UtilityTab(val label: String) {
-    Weather("Weather"),
-    Settings("Settings")
+private enum class UtilityTab(val label: String, val icon: ImageVector) {
+    Weather("Weather", Icons.Filled.WbSunny),
+    Settings("Settings", Icons.Filled.Settings)
 }
 
+/**
+ * App scaffold: a bottom navigation bar switching between the weather and settings screens.
+ * Both screens share one [WeatherViewModel], so a settings change shows up straight away.
+ */
 @Composable
 fun UtilityApp() {
-    var selectedTab by remember { mutableStateOf(UtilityTab.Weather) }
     val viewModel: WeatherViewModel = hiltViewModel()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    var selectedTab by remember { mutableStateOf(UtilityTab.Weather) }
 
     Scaffold(
         bottomBar = {
             NavigationBar {
-                NavigationBarItem(
-                    selected = selectedTab == UtilityTab.Weather,
-                    onClick = { selectedTab = UtilityTab.Weather },
-                    icon = { Icon(Icons.Filled.WbSunny, contentDescription = null) },
-                    label = { Text(UtilityTab.Weather.label) }
-                )
-                NavigationBarItem(
-                    selected = selectedTab == UtilityTab.Settings,
-                    onClick = { selectedTab = UtilityTab.Settings },
-                    icon = { Icon(Icons.Filled.Settings, contentDescription = null) },
-                    label = { Text(UtilityTab.Settings.label) }
-                )
+                UtilityTab.entries.forEach { tab ->
+                    NavigationBarItem(
+                        selected = selectedTab == tab,
+                        onClick = { selectedTab = tab },
+                        icon = { Icon(tab.icon, contentDescription = null) },
+                        label = { Text(tab.label) }
+                    )
+                }
             }
         }
     ) { innerPadding ->

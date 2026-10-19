@@ -25,12 +25,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.jcu.utilityweather.ui.MaxContentWidth
 import com.jcu.utilityweather.ui.WeatherScreenState
 import com.jcu.utilityweather.ui.WeatherUiState
 import com.jcu.utilityweather.ui.theme.UtilityWeatherTheme
-
-/** Keeps content readable on tablets and in landscape instead of stretching edge to edge. */
-private val MaxContentWidth = 480.dp
 
 @Composable
 fun UtilityScreen(

@@ -153,6 +153,7 @@ private fun StatColumn(label: String, value: String) {
 
 private fun Double.roundedString(): String = "%.0f".format(this)
 
+/** Sample data shared by the previews in this package. */
 internal val previewWeather = CurrentWeather(
     cityName = "Townsville, Australia",
     temperature = 24.0,

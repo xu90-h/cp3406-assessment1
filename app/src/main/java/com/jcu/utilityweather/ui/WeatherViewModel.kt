@@ -13,6 +13,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+private const val DEFAULT_CITY = "Townsville"
+
+/** What the weather area of the screen is currently showing. */
 sealed interface WeatherUiState {
     data object Idle : WeatherUiState
     data object Loading : WeatherUiState
@@ -20,8 +23,9 @@ sealed interface WeatherUiState {
     data class Error(val message: String) : WeatherUiState
 }
 
+/** Everything the two screens render: the typed city, the user's settings and the weather result. */
 data class WeatherScreenState(
-    val city: String = "Townsville",
+    val city: String = DEFAULT_CITY,
     val settings: WeatherSettings = WeatherSettings(),
     val weatherState: WeatherUiState = WeatherUiState.Idle
 )

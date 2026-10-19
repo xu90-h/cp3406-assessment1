@@ -84,6 +84,7 @@ app/src/main/java/com/jcu/utilityweather/
 ├── domain/                CurrentWeather, WeatherSettings, WeatherException
 ├── ui/
 │   ├── WeatherViewModel.kt
+│   ├── Layout.kt          Shared layout constants
 │   ├── home/              UtilityScreen and WeatherGlanceCard
 │   ├── settings/          SettingsScreen
 │   ├── navigation/        UtilityApp (bottom-navigation scaffold)
