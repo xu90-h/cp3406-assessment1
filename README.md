@@ -4,6 +4,24 @@ An "at-a-glance" weather utility app built for CP3406/CP5307 Assessment 1. Searc
 and instantly see its current temperature, condition and today's high/low. Everything else
 sits one tap away, so the main screen stays uncluttered.
 
+## Screenshots
+
+Taken on the Android emulator (Pixel 9, Android 15) with live Open-Meteo data.
+
+| Weather at a glance | Details expanded | Settings |
+|:---:|:---:|:---:|
+| <img src="docs/screenshots/weather.png" width="220"> | <img src="docs/screenshots/details.png" width="220"> | <img src="docs/screenshots/settings.png" width="220"> |
+| Key facts only; the card colour follows the conditions | "Show details" reveals feels-like, humidity and wind | Units and displayed details |
+
+| Fahrenheit and mph | Dark mode | Offline |
+|:---:|:---:|:---:|
+| <img src="docs/screenshots/fahrenheit.png" width="220"> | <img src="docs/screenshots/dark.png" width="220"> | <img src="docs/screenshots/offline.png" width="220"> |
+| Changing units in Settings re-fetches the data | Each condition has a dark-theme colour pair | Friendly message instead of a raw error |
+
+Landscape uses a side-by-side layout with a compact card:
+
+<img src="docs/screenshots/landscape.png" width="560">
+
 ## Core features
 
 - **Current weather at a glance** — city name, condition icon, temperature and today's
@@ -91,6 +109,8 @@ app/src/main/java/com/jcu/utilityweather/
 │   └── theme/             Material 3 theme and WeatherPalette (card colours)
 ├── MainActivity.kt
 └── WeatherApplication.kt  Hilt entry point
+
+docs/screenshots/          Screenshots used in this README
 ```
 
 ## Running the app
@@ -226,6 +246,8 @@ Question to raise with the lecturer/tutor:
   landscape with a compact card, and splitting `WeatherGlanceCard` into smaller composables.
   Added `@Preview`s for idle, loading, error, dark, landscape and Fahrenheit states.
 - Added the missing Gradle wrapper so `./gradlew` works after a fresh clone.
+- Captured the README screenshots on the emulator (clean status bar via the emulator's demo mode),
+  covering the main screen, details, settings, unit switching, dark mode, landscape and offline.
 - Tinted the weather card by condition. Checked it on the emulator in light and dark mode with
   different cities: in light mode the whitish cloud and snow emoji blended into very pale
   backgrounds, so those light backgrounds were deepened. A unit test now checks the text contrast
