@@ -1,41 +1,36 @@
 package com.jcu.utilityweather.ui.home
 
-import androidx.compose.animation.AnimatedVisibility
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ExpandLess
-import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.jcu.utilityweather.domain.CurrentWeather
-import com.jcu.utilityweather.domain.WeatherSettings
 import com.jcu.utilityweather.ui.WeatherScreenState
 import com.jcu.utilityweather.ui.WeatherUiState
 import com.jcu.utilityweather.ui.theme.UtilityWeatherTheme
+
+/** Keeps content readable on tablets and in landscape instead of stretching edge to edge. */
+private val MaxContentWidth = 480.dp
 
 @Composable
 fun UtilityScreen(
@@ -44,32 +39,74 @@ fun UtilityScreen(
     onSearch: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        CitySearchField(city = state.city, onCityChange = onCityChange, onSearch = onSearch)
+    val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
 
+    if (isLandscape) {
+        // Landscape is short, so search and weather sit side by side and the card gets the full height.
+        Row(
+            modifier = modifier
+                .fillMaxSize()
+                .padding(horizontal = 24.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(24.dp)
+        ) {
+            CitySearchField(
+                city = state.city,
+                onCityChange = onCityChange,
+                onSearch = onSearch,
+                modifier = Modifier.weight(1f).padding(top = 8.dp)
+            )
+            WeatherPane(state = state, modifier = Modifier.weight(1f).fillMaxHeight())
+        }
+    } else {
         Column(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.Center,
+            modifier = modifier
+                .fillMaxSize()
+                .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            when (val weatherState = state.weatherState) {
-                is WeatherUiState.Idle -> Text("Search a city to see its weather")
-                is WeatherUiState.Loading -> CircularProgressIndicator()
-                is WeatherUiState.Error -> Text(
-                    text = weatherState.message,
-                    color = MaterialTheme.colorScheme.error
-                )
-                is WeatherUiState.Success -> WeatherGlanceCard(
-                    weather = weatherState.weather,
-                    settings = state.settings
-                )
-            }
+            CitySearchField(
+                city = state.city,
+                onCityChange = onCityChange,
+                onSearch = onSearch,
+                modifier = Modifier.widthIn(max = MaxContentWidth)
+            )
+            WeatherPane(state = state, modifier = Modifier.fillMaxSize())
         }
+    }
+}
+
+/** Scrollable so the expanded card is never clipped on short screens. */
+@Composable
+private fun WeatherPane(state: WeatherScreenState, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier
+            .verticalScroll(rememberScrollState())
+            .padding(vertical = 8.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        WeatherContent(state = state, modifier = Modifier.widthIn(max = MaxContentWidth))
+    }
+}
+
+@Composable
+private fun WeatherContent(state: WeatherScreenState, modifier: Modifier = Modifier) {
+    when (val weatherState = state.weatherState) {
+        is WeatherUiState.Idle -> Text(
+            text = "Search a city to see its weather",
+            modifier = modifier
+        )
+        is WeatherUiState.Loading -> CircularProgressIndicator(modifier = modifier)
+        is WeatherUiState.Error -> Text(
+            text = weatherState.message,
+            color = MaterialTheme.colorScheme.error,
+            modifier = modifier
+        )
+        is WeatherUiState.Success -> WeatherGlanceCard(
+            weather = weatherState.weather,
+            settings = state.settings,
+            modifier = modifier
+        )
     }
 }
 
@@ -77,12 +114,13 @@ fun UtilityScreen(
 private fun CitySearchField(
     city: String,
     onCityChange: (String) -> Unit,
-    onSearch: () -> Unit
+    onSearch: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     OutlinedTextField(
         value = city,
         onValueChange = onCityChange,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         label = { Text("City") },
         singleLine = true,
         trailingIcon = {
@@ -93,77 +131,62 @@ private fun CitySearchField(
     )
 }
 
+private val successState = WeatherScreenState(weatherState = WeatherUiState.Success(previewWeather))
+
+@Preview(showBackground = true, name = "Success")
 @Composable
-private fun WeatherGlanceCard(weather: CurrentWeather, settings: WeatherSettings) {
-    val tempSymbol = settings.temperatureUnit.symbol
-    var showDetails by rememberSaveable { mutableStateOf(false) }
-
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Column(
-            modifier = Modifier.padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(text = weather.cityName, style = MaterialTheme.typography.titleLarge)
-            Text(text = weather.icon, fontSize = 56.sp)
-            Text(
-                text = "${weather.temperature.roundedString()}$tempSymbol",
-                fontSize = 48.sp,
-                fontWeight = FontWeight.Bold
-            )
-            Text(text = weather.condition, style = MaterialTheme.typography.bodyLarge)
-
-            HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
-
-            StatColumn(
-                label = "High / Low",
-                value = "${weather.todayMax.roundedString()}° / ${weather.todayMin.roundedString()}°"
-            )
-
-            TextButton(onClick = { showDetails = !showDetails }) {
-                Text(if (showDetails) "Hide details" else "Show details")
-                Icon(
-                    imageVector = if (showDetails) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
-                    contentDescription = null
-                )
-            }
-
-            AnimatedVisibility(visible = showDetails) {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                    if (settings.showFeelsLike) {
-                        StatColumn(label = "Feels like", value = "${weather.feelsLike.roundedString()}$tempSymbol")
-                    }
-                    StatColumn(label = "Humidity", value = "${weather.humidity}%")
-                    if (settings.showWind) {
-                        StatColumn(label = "Wind", value = "${weather.windSpeed.roundedString()} ${settings.windSpeedUnit.label}")
-                    }
-                }
-            }
-        }
+private fun UtilityScreenSuccessPreview() {
+    UtilityWeatherTheme {
+        UtilityScreen(state = successState, onCityChange = {}, onSearch = {})
     }
 }
 
+@Preview(showBackground = true, name = "Dark", uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun StatColumn(label: String, value: String) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(text = value, fontWeight = FontWeight.SemiBold)
-        Text(text = label, style = MaterialTheme.typography.bodyMedium)
+private fun UtilityScreenDarkPreview() {
+    UtilityWeatherTheme(darkTheme = true) {
+        UtilityScreen(state = successState, onCityChange = {}, onSearch = {})
     }
 }
 
-private fun Double.roundedString(): String = "%.0f".format(this)
-
-@Preview(showBackground = true)
+@Preview(showBackground = true, name = "Landscape", device = "spec:width=891dp,height=411dp")
 @Composable
-private fun UtilityScreenPreview() {
+private fun UtilityScreenLandscapePreview() {
+    UtilityWeatherTheme {
+        UtilityScreen(state = successState, onCityChange = {}, onSearch = {})
+    }
+}
+
+@Preview(showBackground = true, name = "Loading")
+@Composable
+private fun UtilityScreenLoadingPreview() {
+    UtilityWeatherTheme {
+        UtilityScreen(
+            state = WeatherScreenState(weatherState = WeatherUiState.Loading),
+            onCityChange = {},
+            onSearch = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Error")
+@Composable
+private fun UtilityScreenErrorPreview() {
     UtilityWeatherTheme {
         UtilityScreen(
             state = WeatherScreenState(
-                weatherState = WeatherUiState.Success(
-                    CurrentWeather("Townsville, Australia", 24.0, 24.0, 63, 19.0, 26.0, 17.0, 2)
-                )
+                weatherState = WeatherUiState.Error("No internet connection. Check your connection and try again.")
             ),
             onCityChange = {},
             onSearch = {}
         )
+    }
+}
+
+@Preview(showBackground = true, name = "Idle")
+@Composable
+private fun UtilityScreenIdlePreview() {
+    UtilityWeatherTheme {
+        UtilityScreen(state = WeatherScreenState(), onCityChange = {}, onSearch = {})
     }
 }

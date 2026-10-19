@@ -1,11 +1,15 @@
 package com.jcu.utilityweather.ui.settings
 
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
@@ -14,11 +18,14 @@ import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.jcu.utilityweather.domain.TemperatureUnit
-import com.jcu.utilityweather.domain.WindSpeedUnit
 import com.jcu.utilityweather.domain.WeatherSettings
+import com.jcu.utilityweather.domain.WindSpeedUnit
+import com.jcu.utilityweather.ui.theme.UtilityWeatherTheme
 
 /** Controls that reshape what the weather screen shows. */
 @Composable
@@ -27,11 +34,29 @@ fun SettingsScreen(
     onSettingsChange: (WeatherSettings) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    // Scrollable for short screens; content is centred and capped in width for landscape/tablets.
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(24.dp)
+            .verticalScroll(rememberScrollState())
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        SettingsContent(
+            settings = settings,
+            onSettingsChange = onSettingsChange,
+            modifier = Modifier.widthIn(max = 480.dp).fillMaxWidth()
+        )
+    }
+}
+
+@Composable
+private fun SettingsContent(
+    settings: WeatherSettings,
+    onSettingsChange: (WeatherSettings) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier) {
         Text(text = "Settings", style = MaterialTheme.typography.titleLarge)
 
         SettingSection(title = "Temperature unit") {
@@ -92,9 +117,37 @@ private fun SwitchRow(label: String, checked: Boolean, onCheckedChange: (Boolean
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text = label, modifier = Modifier.padding(top = 12.dp))
+        Text(text = label, modifier = Modifier.weight(1f))
         Switch(checked = checked, onCheckedChange = onCheckedChange)
+    }
+}
+
+@Preview(showBackground = true, name = "Light")
+@Composable
+private fun SettingsScreenPreview() {
+    UtilityWeatherTheme {
+        SettingsScreen(settings = WeatherSettings(), onSettingsChange = {})
+    }
+}
+
+@Preview(showBackground = true, name = "Dark", uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun SettingsScreenDarkPreview() {
+    UtilityWeatherTheme(darkTheme = true) {
+        SettingsScreen(
+            settings = WeatherSettings(temperatureUnit = TemperatureUnit.FAHRENHEIT, showWind = false),
+            onSettingsChange = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Landscape", device = "spec:width=891dp,height=411dp")
+@Composable
+private fun SettingsScreenLandscapePreview() {
+    UtilityWeatherTheme {
+        SettingsScreen(settings = WeatherSettings(), onSettingsChange = {})
     }
 }
