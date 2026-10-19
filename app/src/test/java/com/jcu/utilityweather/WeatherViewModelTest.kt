@@ -9,11 +9,13 @@ import com.jcu.utilityweather.ui.WeatherViewModel
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
@@ -102,5 +104,30 @@ class WeatherViewModelTest {
         advanceUntilIdle()
 
         coVerify(exactly = 1) { repository.getCurrentWeather(any(), any(), any()) }
+    }
+
+    @Test
+    fun `a slow earlier search cannot overwrite a newer result`() = runTest(dispatcher) {
+        val slowResult = CompletableDeferred<Result<CurrentWeather>>()
+        val older = weather.copy(cityName = "Slowtown")
+        val newer = weather.copy(cityName = "Fastville")
+        coEvery { repository.getCurrentWeather("Slowtown", any(), any()) } coAnswers { slowResult.await() }
+        coEvery { repository.getCurrentWeather("Fastville", any(), any()) } returns Result.success(newer)
+
+        val viewModel = WeatherViewModel(repository)
+        advanceUntilIdle()
+
+        viewModel.onCityChanged("Slowtown")
+        viewModel.onSearch()
+        runCurrent()
+        viewModel.onCityChanged("Fastville")
+        viewModel.onSearch()
+        advanceUntilIdle()
+        slowResult.complete(Result.success(older))
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value.weatherState
+        assertTrue(state is WeatherUiState.Success)
+        assertEquals("Fastville", (state as WeatherUiState.Success).weather.cityName)
     }
 }

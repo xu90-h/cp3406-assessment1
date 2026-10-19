@@ -6,6 +6,7 @@ import com.jcu.utilityweather.data.repository.WeatherRepository
 import com.jcu.utilityweather.domain.CurrentWeather
 import com.jcu.utilityweather.domain.WeatherSettings
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -42,6 +43,9 @@ class WeatherViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(WeatherScreenState())
     val uiState: StateFlow<WeatherScreenState> = _uiState.asStateFlow()
 
+    /** The request in flight, kept so a newer one can cancel it. */
+    private var refreshJob: Job? = null
+
     init {
         refresh()
     }
@@ -63,8 +67,10 @@ class WeatherViewModel @Inject constructor(
         val state = _uiState.value
         if (state.city.isBlank()) return
 
+        // Cancel any request still running so a slow earlier one cannot overwrite this result.
+        refreshJob?.cancel()
         _uiState.update { it.copy(weatherState = WeatherUiState.Loading) }
-        viewModelScope.launch {
+        refreshJob = viewModelScope.launch {
             repository.getCurrentWeather(
                 city = state.city,
                 temperatureUnit = state.settings.temperatureUnit,

@@ -107,9 +107,9 @@ From the command line:
 
 ## Tests
 
-There are 14 unit tests in `app/src/test/java/com/jcu/utilityweather/`:
+There are 15 unit tests in `app/src/test/java/com/jcu/utilityweather/`:
 
-- `WeatherViewModelTest` (5) — initial load, error propagation, re-fetching when a unit
+- `WeatherViewModelTest` (6) — initial load, error propagation, a slow earlier search not overwriting a newer one, re-fetching when a unit
   changes, display toggles not re-fetching, and blank-city handling.
 - `WeatherRepositoryImplTest` (6) — mapping geocoding and forecast into one model, requesting the
   chosen units, unknown city, offline, timeout and server-error messages.
