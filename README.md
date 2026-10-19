@@ -14,6 +14,9 @@ sits one tap away, so the main screen stays uncluttered.
 - **Settings that reshape the main screen** — switch between °C/°F and km/h/mph, and
   choose whether "feels like" and wind speed appear in the details. Changes apply
   immediately; unit changes re-fetch the data in the new unit.
+- **Condition-tinted card** — the weather card changes colour with the conditions (clear, cloudy,
+  fog, rain, snow, storm) in both light and dark mode. Every colour pair is checked in a unit test
+  to keep text at or above the WCAG AA 4.5:1 contrast ratio.
 - **Friendly error messages** — offline, timeout, server error and unknown-city cases each
   show a clear message instead of a raw exception.
 - **Responsive layout** — content scrolls on short screens and is capped to a readable
@@ -26,7 +29,7 @@ sits one tap away, so the main screen stays uncluttered.
 |---|---|
 | Week 1 — Kotlin and Android Studio | Kotlin throughout; Gradle version catalog (`gradle/libs.versions.toml`) |
 | Week 2 — Layouts with Jetpack Compose | `UtilityApp`, `UtilityScreen`, `WeatherGlanceCard`; scrolling, landscape layout, `@Preview`s |
-| Week 3 — Material 3 | Material 3 theme, `NavigationBar`, `Card`, segmented buttons, switches, dynamic colour |
+| Week 3 — Material 3 | Material 3 theme, `NavigationBar`, `Card`, segmented buttons, switches, dynamic colour, condition-based card colours (`WeatherPalette`) |
 | Week 4 — ViewModel, DI, Repository | `WeatherViewModel` + `StateFlow`, `WeatherRepository`, Hilt modules |
 | Week 5 — Web APIs with Retrofit | `WeatherApiService` (Retrofit + Moshi + OkHttp) calling Open-Meteo |
 
@@ -84,7 +87,7 @@ app/src/main/java/com/jcu/utilityweather/
 │   ├── home/              UtilityScreen and WeatherGlanceCard
 │   ├── settings/          SettingsScreen
 │   ├── navigation/        UtilityApp (bottom-navigation scaffold)
-│   └── theme/             Material 3 theme
+│   └── theme/             Material 3 theme and WeatherPalette (card colours)
 ├── MainActivity.kt
 └── WeatherApplication.kt  Hilt entry point
 ```
@@ -103,14 +106,17 @@ From the command line:
 
 ## Tests
 
-There are 11 unit tests in `app/src/test/java/com/jcu/utilityweather/`:
+There are 14 unit tests in `app/src/test/java/com/jcu/utilityweather/`:
 
 - `WeatherViewModelTest` (5) — initial load, error propagation, re-fetching when a unit
   changes, display toggles not re-fetching, and blank-city handling.
 - `WeatherRepositoryImplTest` (6) — mapping geocoding and forecast into one model, requesting the
   chosen units, unknown city, offline, timeout and server-error messages.
 
-Both use MockK to fake their dependencies.
+- `WeatherCategoryTest` (2) — weather codes map to the right category, unknown codes fall back.
+- `WeatherPaletteTest` (1) — every card colour pair in light and dark mode meets 4.5:1 contrast.
+
+The ViewModel and repository tests use MockK to fake their dependencies.
 
 ## Data source and credits
 
@@ -219,3 +225,7 @@ Question to raise with the lecturer/tutor:
   landscape with a compact card, and splitting `WeatherGlanceCard` into smaller composables.
   Added `@Preview`s for idle, loading, error, dark, landscape and Fahrenheit states.
 - Added the missing Gradle wrapper so `./gradlew` works after a fresh clone.
+- Tinted the weather card by condition. Checked it on the emulator in light and dark mode with
+  different cities: in light mode the whitish cloud and snow emoji blended into very pale
+  backgrounds, so those light backgrounds were deepened. A unit test now checks the text contrast
+  of every colour pair.

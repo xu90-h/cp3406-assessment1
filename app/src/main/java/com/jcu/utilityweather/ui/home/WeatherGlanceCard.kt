@@ -10,7 +10,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -23,6 +25,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -33,6 +37,7 @@ import com.jcu.utilityweather.domain.TemperatureUnit
 import com.jcu.utilityweather.domain.WeatherSettings
 import com.jcu.utilityweather.domain.WindSpeedUnit
 import com.jcu.utilityweather.ui.theme.UtilityWeatherTheme
+import com.jcu.utilityweather.ui.theme.weatherPalette
 
 /**
  * The at-a-glance card: key facts are always visible, the rest sits behind a
@@ -49,21 +54,35 @@ fun WeatherGlanceCard(
     // Landscape screens are short, so the card is laid out more tightly there.
     val compact = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
 
-    Card(modifier = modifier.fillMaxWidth()) {
+    // The card is tinted by condition; dark mode is read from the theme so previews and the app agree.
+    val darkTheme = MaterialTheme.colorScheme.background.luminance() < 0.5f
+    val palette = weatherPalette(weather.category, darkTheme)
+
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = palette.container, contentColor = palette.content)
+    ) {
         Column(
             modifier = Modifier.padding(if (compact) 12.dp else 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             WeatherSummary(weather = weather, settings = settings, compact = compact)
 
-            HorizontalDivider(modifier = Modifier.padding(vertical = if (compact) 8.dp else 16.dp))
+            HorizontalDivider(
+                modifier = Modifier.padding(vertical = if (compact) 8.dp else 16.dp),
+                color = palette.content.copy(alpha = 0.25f)
+            )
 
             StatColumn(
                 label = "High / Low",
                 value = "${weather.todayMax.roundedString()}° / ${weather.todayMin.roundedString()}°"
             )
 
-            DetailsToggle(expanded = showDetails, onToggle = { showDetails = !showDetails })
+            DetailsToggle(
+                expanded = showDetails,
+                onToggle = { showDetails = !showDetails },
+                contentColor = palette.content
+            )
 
             AnimatedVisibility(visible = showDetails) {
                 DetailsRow(weather = weather, settings = settings)
@@ -92,8 +111,11 @@ private fun WeatherSummary(weather: CurrentWeather, settings: WeatherSettings, c
 }
 
 @Composable
-private fun DetailsToggle(expanded: Boolean, onToggle: () -> Unit) {
-    TextButton(onClick = onToggle) {
+private fun DetailsToggle(expanded: Boolean, onToggle: () -> Unit, contentColor: Color) {
+    TextButton(
+        onClick = onToggle,
+        colors = ButtonDefaults.textButtonColors(contentColor = contentColor)
+    ) {
         Text(if (expanded) "Hide details" else "Show details")
         Icon(
             imageVector = if (expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
@@ -165,3 +187,35 @@ private fun WeatherGlanceCardExpandedPreview() {
         )
     }
 }
+
+private val previewCodes = listOf(0 to "Clear", 2 to "Cloudy", 45 to "Fog", 63 to "Rain", 73 to "Snow", 95 to "Storm")
+
+@Composable
+private fun ConditionGallery(darkTheme: Boolean) {
+    UtilityWeatherTheme(darkTheme = darkTheme) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            previewCodes.forEach { (code, _) ->
+                WeatherGlanceCard(
+                    weather = previewWeather.copy(weatherCode = code),
+                    settings = WeatherSettings()
+                )
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true, name = "All conditions - light", heightDp = 1500)
+@Composable
+private fun ConditionGalleryLightPreview() = ConditionGallery(darkTheme = false)
+
+@Preview(
+    showBackground = true,
+    name = "All conditions - dark",
+    heightDp = 1500,
+    uiMode = Configuration.UI_MODE_NIGHT_YES
+)
+@Composable
+private fun ConditionGalleryDarkPreview() = ConditionGallery(darkTheme = true)

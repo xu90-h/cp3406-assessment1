@@ -12,6 +12,20 @@ data class CurrentWeather(
 ) {
     val condition: String get() = describeWeatherCode(weatherCode)
     val icon: String get() = iconForWeatherCode(weatherCode)
+    val category: WeatherCategory get() = categoryForWeatherCode(weatherCode)
+}
+
+/** Broad groups of conditions, used to colour the weather card. */
+enum class WeatherCategory { CLEAR, CLOUDY, FOG, RAIN, SNOW, STORM, UNKNOWN }
+
+fun categoryForWeatherCode(code: Int): WeatherCategory = when (code) {
+    0 -> WeatherCategory.CLEAR
+    1, 2, 3 -> WeatherCategory.CLOUDY
+    45, 48 -> WeatherCategory.FOG
+    51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82 -> WeatherCategory.RAIN
+    71, 73, 75, 77, 85, 86 -> WeatherCategory.SNOW
+    95, 96, 99 -> WeatherCategory.STORM
+    else -> WeatherCategory.UNKNOWN
 }
 
 /** Maps WMO weather codes (used by Open-Meteo) to a short human-readable label. */
